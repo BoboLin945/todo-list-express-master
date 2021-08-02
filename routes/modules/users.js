@@ -11,13 +11,14 @@ router.get('/login', (req, res) => {
 // login
 router.post('/login', passport.authenticate('local', {
   successRedirect: '/',
-  failureRedirect: '/users/login'
+  failureRedirect: '/users/login',
+  failureFlash: true
 }))
 
 // logout
 router.get('/logout', (req, res) => {
   req.logout()
-  console.log('logout successful!')
+  req.flash('success_msg', '成功登出！')
   res.redirect('/users/login')
 })
 
@@ -29,12 +30,22 @@ router.get('/register', (req, res) => {
 // register
 router.post('/register', (req, res) => {
   const { name, email, password, confirmPassword } = req.body
+  const errors = []
+  if (!name || !email || !password || !confirmPassword) {
+    errors.push({ message: '所有欄位皆為必填！' })
+  }
+  if (password !== confirmPassword) {
+    errors.push({ message: '密碼與確認密碼不相符！' })
+  }
+  if (errors.length) {
+    return res.render('register', { name, email, password, confirmPassword, errors })
+  }
   User.findOne({ email })
     .then(user => {
       // user email 已經註冊過
       if (user) {
-        console.log('User already exists.')
-        return res.render('register', { name, email, password, confirmPassword })
+        errors.push({ message: 'User already exists.' })
+        return res.render('register', { name, email, password, confirmPassword, errors })
       } else {
         return User.create({
           name,
