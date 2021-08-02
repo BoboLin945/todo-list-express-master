@@ -24,6 +24,14 @@ app.use(session({
 
 usePassport(app)
 
+// 所有的 view 都可以存取
+app.use((req, res, next) => {
+  // isAuthenticated() Boolean to res
+  res.locals.isAuthenticated = req.isAuthenticated()
+  res.locals.user = req.user
+  next()
+})
+
 app.use(routes)
 
 app.listen(PORT, () => {
